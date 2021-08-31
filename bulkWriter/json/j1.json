@@ -1,0 +1,39 @@
+{
+  "title": "たいとるです",
+  "tags": [
+    "あいうえお",
+    "かきくけこ",
+    "さしすせそ"
+  ],
+  "image": "image/png:afwefafafwafaf",
+  "materials": [
+    {
+      "name": "にんじん","amount":1
+    },
+    {
+      "name": "じゃがいも","amount":2
+    },
+    {
+      "name": "たまねぎ","amount":3
+    }
+  ],
+  "seasonings": [
+    "ソース",
+    "醤油",
+    "砂糖"
+  ],
+  "procs": [
+    {
+      "desc": "行程１",
+      "image": "image/png:afwefafafwafaf"
+    },
+    {
+      "desc": "行程２",
+      "image": "image/png:afwefafafwafaf"
+    },
+    {
+      "desc": "行程３",
+      "image": "image/png:afwefafafwafaf"
+    }
+  ]
+}
