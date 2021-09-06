@@ -17,6 +17,5 @@ func TestUnescape(t *testing.T) {
 	}
 	r := io.Reader(file)
 
-	es := bulkWriter.WriteJson(r)
-	fmt.Println(es)
+	bulkWriter.WriteJson("recipe", r)
 }
