@@ -8,16 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-func readbyte(r io.Reader) (byte, error) {
-	var p [1]byte
-
-	n, err := r.Read(p[:])
-	if n > 0 {
-		return p[0], nil
-	}
-	return 0, err
-}
-
 func createFile(curKey string, curVal string) {
 	if curKey == "" && curVal == "" {
 		return
@@ -44,11 +34,10 @@ func createFile(curKey string, curVal string) {
 
 func WriteJson(db string, r io.Reader) {
 	var curKey, curVal string
-	buf := make([]byte, 0)
+	buf := make([]byte, 0)	// 余計にバッファを最初から作らなくても自動拡張と結果が変わらない
 
 	// JSON.Decodeを使わない方向でやる
-	var n byte
-	var err error
+	var n[1] byte
 	var inEscape bool
 	var inQuote bool // 必要ないスペース判定のために、クォートの中かどうかも判定が必要
 
@@ -59,10 +48,12 @@ func WriteJson(db string, r io.Reader) {
 	os.Mkdir(RootDir, 0777)
 	os.Chdir(RootDir)
 
+	
 	for {
-		n, err = readbyte(r)
+		_ , err := r.Read(n[:])
+
 		if err != io.EOF {
-			switch n {
+			switch n[0] {
 
 			case '\\':
 				if inEscape {
@@ -73,12 +64,12 @@ func WriteJson(db string, r io.Reader) {
 					inEscape = true
 				}
 				// エスケープは無視しない（てか出来ない）
-				buf = append(buf, n)
+				buf = append(buf, n[0])
 
 			case '"':
 				// ダブルクォートは、エスケープされていれば足す
 				if inEscape {
-					buf = append(buf, n)
+					buf = append(buf, n[0])
 					inEscape = false
 				} else {
 					// エスケープされていないので無視するが、クォート以外の空白を無視するためにInQuote処理をする
@@ -93,24 +84,25 @@ func WriteJson(db string, r io.Reader) {
 				}
 			case ':':
 				if inQuote {
-					buf = append(buf, n)
+					buf = append(buf, n[0])
 				} else {
 					// ：まできたら、bufの中身はキーと判定できる
 					curKey = string(buf)
 					// 足したら、バッファをクリア
-					buf = make([]byte, 0)
+//					buf = make([]byte, 0)
+					buf = buf[:0]
 				}
 			case '\t', '\r', '\n', ' ':
 				// 空白系の無視
 				if inQuote {
 					// クォート中なので無視せず足しこむ
-					buf = append(buf, n)
+					buf = append(buf, n[0])
 				} else {
 					// クォート外なので無視する
 				}
 			case '{', '[':
 				if inQuote {
-					buf = append(buf, n)
+					buf = append(buf, n[0])
 				} else {
 					// フォルダを作ってチェンジディレクトリ
 					if curKey == "" {
@@ -120,7 +112,7 @@ func WriteJson(db string, r io.Reader) {
 						// 同じフォルダにあるDATA.txtにUUIDを書き込む
 						createFile("", "-#"+curKey) // 頭に-#を付けてUUIDとする。これで出てきた順序が保存できるはず
 					}
-					if n == '[' {
+					if n[0] == '[' {
 						curKey += "[]" // 配列の印をつける
 					}
 					os.Mkdir(curKey, 0777)
@@ -129,12 +121,14 @@ func WriteJson(db string, r io.Reader) {
 				}
 			case '}', ',', ']':
 				if inQuote {
-					buf = append(buf, n)
+					buf = append(buf, n[0])
 				} else {
 					if len(buf) > 0 {
 						// ここまででbufがあるということはcurValの確定がされていない
 						curVal = string(buf)  // まずは確定
-						buf = make([]byte, 0) // bufをクリア
+//						buf = make([]byte, 0)
+						buf = buf[:0]
+
 					} else {
 						// bufが無いという事は、すでに出力済みなので、なにもしない？
 
@@ -143,19 +137,18 @@ func WriteJson(db string, r io.Reader) {
 					createFile(curKey, curVal)
 					curKey = ""
 					curVal = ""
-					if n == '}' || n == ']' {
+					if n[0] == '}' || n[0] == ']' {
 						// }か]のときはディレクトリを戻る
 						os.Chdir("..")
 					}
 				}
 			default:
 				// その他の文字は普通に足す
-				buf = append(buf, n)
+				buf = append(buf, n[0])
 			}
 		} else {
 			//		EOF
 			break
 		}
 	}
-
 }
