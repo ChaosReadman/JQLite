@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestUnescape(t *testing.T) {
+func TestBulkWriter(t *testing.T) {
 	fname := "json/j1.json"
 	file, err := os.Open(fname)
 	if err != nil {
