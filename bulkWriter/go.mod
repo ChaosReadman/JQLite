@@ -1,4 +1,4 @@
-module bulkWriter
+module jsonDB
 
 go 1.16
 

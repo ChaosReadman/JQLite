@@ -1,4 +1,4 @@
-package bulkWriter
+package jsonDB
 
 import (
 	"io"
@@ -7,6 +7,8 @@ import (
 
 	"github.com/google/uuid"
 )
+
+var RootDir string
 
 func createFile(curKey string, curVal string) {
 	if curKey == "" && curVal == "" {
@@ -32,25 +34,25 @@ func createFile(curKey string, curVal string) {
 	f.WriteString((strBuf.String()))
 }
 
-func WriteJson(db string, r io.Reader) {
+// JSONをフォルダ構造へバルクインサート
+func Insert(db string, r io.Reader) {
 	var curKey, curVal string
-	buf := make([]byte, 0)	// 余計にバッファを最初から作らなくても自動拡張と結果が変わらない
+	buf := make([]byte, 0) // 余計にバッファを最初から作らなくても自動拡張と結果が変わらない
 
 	// JSON.Decodeを使わない方向でやる
-	var n[1] byte
+	var n [1]byte
 	var inEscape bool
 	var inQuote bool // 必要ないスペース判定のために、クォートの中かどうかも判定が必要
 
 	inEscape = false
 	inQuote = false
 
-	RootDir := "jsonRoot/" + db
+	RootDir = "jsonRoot/" + db
 	os.Mkdir(RootDir, 0777)
 	os.Chdir(RootDir)
 
-	
 	for {
-		_ , err := r.Read(n[:])
+		_, err := r.Read(n[:])
 
 		if err != io.EOF {
 			switch n[0] {
@@ -89,8 +91,7 @@ func WriteJson(db string, r io.Reader) {
 					// ：まできたら、bufの中身はキーと判定できる
 					curKey = string(buf)
 					// 足したら、バッファをクリア
-//					buf = make([]byte, 0)
-					buf = buf[:0]
+					buf = buf[:0] //これ教わったやり方（再使用する際のクリアの仕方）
 				}
 			case '\t', '\r', '\n', ' ':
 				// 空白系の無視
@@ -125,13 +126,10 @@ func WriteJson(db string, r io.Reader) {
 				} else {
 					if len(buf) > 0 {
 						// ここまででbufがあるということはcurValの確定がされていない
-						curVal = string(buf)  // まずは確定
-//						buf = make([]byte, 0)
-						buf = buf[:0]
-
+						curVal = string(buf) // まずは確定
+						buf = buf[:0]        //これ教わったやり方（再使用する際のクリアの仕方）
 					} else {
 						// bufが無いという事は、すでに出力済みなので、なにもしない？
-
 					}
 					// キーと値でそのディレクトリ内にファイルを出力
 					createFile(curKey, curVal)
@@ -151,4 +149,19 @@ func WriteJson(db string, r io.Reader) {
 			break
 		}
 	}
+}
+
+func SelectNodes(db string, root string, match string) string {
+	var retStr string
+	// DBまではそのままCDできるはず（出来ないとエラー）
+	RootDir = "jsonRoot/" + db
+	if os.Chdir(RootDir) != nil {
+		return ""
+	}
+	// rootの場所まで移動する
+	// DATA.txtにフォルダ情報がかかれている
+
+	// rootから先をJSON文字列に変換する
+
+	return retStr
 }
